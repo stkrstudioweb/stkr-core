@@ -888,6 +888,21 @@ export default defineConfig({
 
 Why: `compressHTML: true` (the Astro default) strips whitespace between text nodes and inline elements in the production build. This causes words and inline links to run together — the word before a link and the link text merge with no space. It also breaks the required spaces in the reCAPTCHA notice beneath every form, which is a compliance issue. This bug only appears in production, never in dev, so it will not be caught during local review. Setting `compressHTML: false` prevents it entirely at zero meaningful cost — Cloudflare gzips the output at the edge anyway.
 
+**Node version — mandatory on every build:**
+Cloudflare Pages builds with an old default Node version unless the repo says otherwise. Current Astro refuses to build on it (`Node.js v22.16.0 is not supported by Astro!`), and the deploy fails even though `npm run build` works on your machine. Every repo must pin Node in a `.node-version` file at the project root, committed with the first push.
+
+Pin the latest Node LTS release, straight after `npm install`:
+```bash
+curl -s https://nodejs.org/dist/index.json \
+  | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{console.log(JSON.parse(d).find(r=>r.lts).version.slice(1))})" \
+  > .node-version
+cat .node-version          # e.g. 24.22.0 (an exact version, never just "24")
+npm view astro engines     # the pinned version must satisfy the "node" range shown here
+```
+- Use an exact version number. Cloudflare installs exactly what the file says.
+- Use one file only (`.node-version`). Do not also add `.nvmrc`, so there is a single source of truth.
+- Never pin an odd-numbered (non-LTS) release, even if it is what you have installed locally.
+
 ### File Structure
 ```
 [client-name]-website/
@@ -919,6 +934,7 @@ Why: `compressHTML: true` (the Astro default) strips whitespace between text nod
 │       ├── 404.astro
 │       └── services/
 │           └── [service pages]
+├── .node-version             (exact Node LTS version, see Node version above)
 ├── astro.config.mjs
 └── package.json
 ```
@@ -1002,7 +1018,19 @@ Add a `public/_headers` file (Cloudflare Pages reads this natively — no Worker
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: geolocation=(), microphone=(), camera=()
   Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+
+# Preview hosts must never be indexed. Only the client's live domain should rank.
+https://[client-slug].stkrstudio.com/*
+  X-Robots-Tag: noindex
+
+https://:project.pages.dev/*
+  X-Robots-Tag: noindex
+
+https://:version.:project.pages.dev/*
+  X-Robots-Tag: noindex
 ```
+Replace `[client-slug]` with this client's preview slug (see Preview URL below). The noindex rules only match the preview hosts, so the client's own domain is unaffected when it goes live.
+
 Verify the result at securityheaders.com before launch.
 
 ### Performance Standards
@@ -1050,9 +1078,23 @@ git commit -m "Initial build — [Client Name]"
 git push -u origin main
 ```
 
+### Preview URL — every build
+Clients never see a pages.dev link. Every preview goes on a subdomain of stkrstudio.com:
+
+`https://[client-slug].stkrstudio.com`
+
+**Choosing the client slug:**
+- The business name, lowercase, letters and numbers only. Drop "Ltd", "the", the town and the TLD unless the name needs them to make sense.
+- Short and recognisable to the client: `wolfanddagger`, `thepickle`, `smithdrainage`, `moresleepmoresmiles`.
+- Use a hyphen only when the words would otherwise read wrongly, e.g. `pen-island`.
+- Check it is free: `dig +short [client-slug].stkrstudio.com` must return nothing.
+
+Use the same slug as the Cloudflare Pages project name (Step 5), so the pages.dev fallback matches too.
+
 **Step 4 — Tell the designer**
 Once pushed, output:
 - The GitHub repo URL: https://github.com/stkrstudioweb/client-[domain]
+- The preview URL: https://[client-slug].stkrstudio.com
 - The Cloudflare Pages connection steps below
 - Any items from the handover summary that need attention
 - The client message (see Step 6)
@@ -1061,13 +1103,18 @@ Once pushed, output:
 1. Cloudflare dashboard — Workers & Pages — Create — Pages — Connect to Git
 2. Authorise the stkrstudioweb GitHub account
 3. Select the client repo e.g. client-more-sleep-more-smiles
-4. Project name: [domain without client- prefix] e.g. more-sleep-more-smiles — this sets the pages.dev URL
-5. Build command: `npm run build`
+4. Project name: the client slug, e.g. `moresleepmoresmiles` (this sets the fallback pages.dev URL)
+5. Framework preset: Astro. Build command: `npm run build`
 6. Output directory: `dist`
 7. Production branch: `main`
-8. Click Save and Deploy — pages.dev link generated automatically
+8. Environment variables: add `NODE_VERSION` with the same value as the repo's `.node-version` file. This is a backup in case the file is ever missing.
+9. Click Save and Deploy, and wait for the first build to succeed
+10. Open the project — Custom domains — Set up a custom domain — enter `[client-slug].stkrstudio.com` — Continue — Activate domain. stkrstudio.com is on Cloudflare, so the DNS record is added automatically and SSL is issued within a few minutes.
+11. Open `https://[client-slug].stkrstudio.com` and check it loads before sending the client message
 
 Every future push to GitHub triggers an automatic redeploy. This is the only correct deployment method.
+
+If a build fails with `Node.js vXX is not supported by Astro`, the repo is missing `.node-version` or it pins too old a version. Fix the file in the repo and push. Do not work around it in the dashboard alone.
 
 **Step 6 — Client message (mandatory, every build)**
 Once the draft is built and pushed to the repo, write a personal message for the designer to send to the client. Output it in the handover as a single plain-text block that is ready to copy and paste. Never send it yourself.
@@ -1078,7 +1125,7 @@ Follow this layout exactly, one paragraph per line as below:
 Hi [Client first name(s)]! 👋[emoji that fits the business]  [One specific, genuine compliment about their business]. [One short line about something they're known for].
 
 I noticed you don't have a website yet, so I put one together for you to have a look at:
-https://[project-name].pages.dev
+https://[client-slug].stkrstudio.com
 
 It's got your [list of what's actually on the site, e.g. menu, opening times, services, reviews, photos].
 A bit about us: we're STKR Studio, and we make websites for independent businesses. You can see more of what we do at https://stkrstudio.com
@@ -1093,7 +1140,7 @@ Happy to tweak anything if you'd like it changed. Either way, [warm, light-heart
 Hi Sam & Denisa! 👋🥒  Love what you've got going on at The Pickle. The pickle lemonade had me sold.
 
 I noticed you don't have a website yet, so I put one together for you to have a look at:
-https://pickle-cafe-site.pages.dev
+https://thepickle.stkrstudio.com
 
 It's got your menu, opening times, the pickles, reviews and a load of your photos from Instagram.
 A bit about us: we're STKR Studio, and we make websites for independent businesses. You can see more of what we do at https://stkrstudio.com
@@ -1104,11 +1151,11 @@ Happy to tweak anything if you'd like it changed. Either way, I'll probably be i
 ```
 
 **Rules for the client message:**
-- **Specific to this build:** the names, emoji, compliment, pages.dev link, list of what's on the site and sign-off must all be correct for the website you have just built. Check each one against the brief and the finished site before outputting the message.
+- **Specific to this build:** the names, emoji, compliment, preview link, list of what's on the site and sign-off must all be correct for the website you have just built. Check each one against the brief and the finished site before outputting the message.
 - **Greeting:** use the client's first name(s) from the brief. If the client's name is not known, use the business name instead, e.g. "Hi The Pickle team!" or "Hi Smith Drainage!". Never guess a name.
 - **Tone:** human, warm and approachable, like a local writing to a local. Casual British English. Short sentences. No sales jargon, no corporate phrases, no exclamation marks beyond the greeting.
 - **Compliment and sign-off:** must be specific to this business and based on real details from the brief, their existing site, social media or reviews. Never invent a product, visit, or fact. If there is nothing specific to draw on, keep it simple and genuine rather than making something up.
-- **Link:** use the actual pages.dev URL for this site. If the designer has not yet connected Cloudflare Pages (Step 5), use the expected URL `https://[project-name].pages.dev` and tell the designer to confirm it before sending.
+- **Link:** always the `https://[client-slug].stkrstudio.com` preview URL, never a pages.dev link. If the designer has not yet added the custom domain (Step 5), still use the stkrstudio.com URL and tell the designer it must be set up and loading before the message is sent.
 - **What's on the site:** list only things that were actually built, in plain words.
 - **Existing website:** if the client already has a website (Modernise & Amend or Carbon Copy builds), replace the "I noticed you don't have a website yet" line with a natural equivalent, e.g. "I had a go at giving your website a fresh look, so I put a new version together for you to have a look at:".
 - **Fixed text:** the "A bit about us" line and the £50 a month paragraph must be used word for word. Never change the price, the terms or the links.
@@ -1145,10 +1192,10 @@ Add a checklist item: all crawled URLs from the old site either exist in the new
 - Connect GitHub repo to Cloudflare Pages
 - Build command: `npm run build`
 - Output directory: `dist`
-- Deploy and share the pages.dev preview link with the client before pointing the domain
+- Add the `[client-slug].stkrstudio.com` custom domain and share that preview link with the client before pointing their domain
 
 ### DNS Go Live
-Once client has approved the pages.dev preview:
+Once client has approved the stkrstudio.com preview:
 ```
 Type: CNAME
 Name: www
@@ -1182,9 +1229,11 @@ git push
 
 Do this after every single set of amends. Never leave changes sitting locally without pushing.
 
-If the designer asks for further changes after the initial push, apply all changes, then run the same three commands above. The pages.dev link and live domain will both update automatically.
+If the designer asks for further changes after the initial push, apply all changes, then run the same three commands above. The preview link and live domain will both update automatically.
 
 ### Pre-Launch Checklist
+- [ ] `.node-version` committed with an exact Node LTS version that satisfies `npm view astro engines`
+- [ ] Preview live at `https://[client-slug].stkrstudio.com`, with noindex on preview hosts in `_headers`
 - [ ] All pages present and URLs match brief / original exactly
 - [ ] Canonical tags present on every page and self-referencing the correct domain/trailing-slash convention
 - [ ] www / non-www redirect in place, only one version resolves
