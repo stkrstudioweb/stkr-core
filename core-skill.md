@@ -757,9 +757,9 @@ Services in the dropdown come from the brief — use the services listed under P
 If the brief requests any other custom fields — e.g. preferred callback time, property type, postcode — add them between the standard fields in a logical order. Always mark them as required unless the brief says otherwise.
 
 ### Form Submission
-- Forms submit to the Cloudflare Worker at: [STKR_FORM_WORKER_URL]
+- Forms submit to the Cloudflare Worker at: https://stkr-form-worker.stkrstudio.workers.dev
 - This Worker URL is fixed — use it on every site, do not change it
-- reCAPTCHA v3 site key: [STKR_RECAPTCHA_SITE_KEY]
+- reCAPTCHA v3 site key: 6LcdlvYtAAAAAHYfwmOLnQjlThc116N2R1p7luLv
 - This site key is fixed — use it on every site, do not change it
 - On successful submission — redirect to /thank-you/
 - Create a /thank-you/ page matching the site design with a friendly confirmation message
@@ -779,7 +779,7 @@ Instead, load reCAPTCHA lazily — only on pages with a form, triggered on first
     if (recaptchaLoaded) return
     recaptchaLoaded = true
     const script = document.createElement('script')
-    script.src = 'https://www.google.com/recaptcha/api.js?render=[STKR_RECAPTCHA_SITE_KEY]'
+    script.src = 'https://www.google.com/recaptcha/api.js?render=6LcdlvYtAAAAAHYfwmOLnQjlThc116N2R1p7luLv'
     document.head.appendChild(script)
   }
 
@@ -988,7 +988,7 @@ Mark both as conversions in GA4.
 Not everything that looks like a key needs the same treatment:
 - **reCAPTCHA Site Key** — public, goes directly in the frontend HTML/JS.
 - **reCAPTCHA Secret Key** — never in frontend code. Lives only inside the Cloudflare Worker, used to verify the token server-side.
-- **Amazon SES credentials** — encrypted environment variables on the Cloudflare Worker only (Cloudflare dashboard or `wrangler secret put`). Never in the Astro repo, never in a committed `.env` file.
+- **Resend API key** — encrypted secret on the Cloudflare Worker only (`wrangler secret put RESEND_API_KEY`). Never in the Astro repo, never in a committed `.env` file.
 - **Envato API key** — used locally by whoever is sourcing stock images during the build. It never touches the live site, the repo, or Cloudflare at all.
 - **GA4 / GTM / Meta Pixel IDs** — not secrets, visible in page source regardless. Fine to hardcode in `Layout.astro`.
 Rule of thumb: if exposing it lets someone send email as the client or run up API costs, it's a secret — encrypted env var, never in git. If it's just an identifier already visible in the rendered page, hardcoding it is fine.
