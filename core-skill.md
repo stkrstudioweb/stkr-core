@@ -1055,6 +1055,7 @@ Once pushed, output:
 - The GitHub repo URL: https://github.com/stkrstudioweb/client-[domain]
 - The Cloudflare Pages connection steps below
 - Any items from the handover summary that need attention
+- The client message (see Step 6)
 
 **Step 5 — Cloudflare Pages connection (designer does this)**
 1. Cloudflare dashboard — Workers & Pages — Create — Pages — Connect to Git
@@ -1067,6 +1068,51 @@ Once pushed, output:
 8. Click Save and Deploy — pages.dev link generated automatically
 
 Every future push to GitHub triggers an automatic redeploy. This is the only correct deployment method.
+
+**Step 6 — Client message (mandatory, every build)**
+Once the draft is built and pushed to the repo, write a personal message for the designer to send to the client. Output it in the handover as a single plain-text block that is ready to copy and paste. Never send it yourself.
+
+Follow this layout exactly, one paragraph per line as below:
+
+```
+Hi [Client first name(s)]! 👋[emoji that fits the business]  [One specific, genuine compliment about their business]. [One short line about something they're known for].
+
+I noticed you don't have a website yet, so I put one together for you to have a look at:
+https://[project-name].pages.dev
+
+It's got your [list of what's actually on the site, e.g. menu, opening times, services, reviews, photos].
+A bit about us: we're STKR Studio, and we make websites for independent businesses. You can see more of what we do at https://stkrstudio.com
+
+If you fancy keeping it, it's £50 a month to get it live. That includes your own domain, there's nothing to pay upfront and there's no contract. Payments go through GoCardless by Direct Debit, so it's all secure. If you ever want to stop, you just stop, and the domain's yours to take with you.
+
+Happy to tweak anything if you'd like it changed. Either way, [warm, light-hearted sign-off that relates to their business].
+```
+
+**Example of the tone and layout only.** This was written for a different client (a cafe called The Pickle, owners Sam & Denisa). Never reuse anything from it: not the names, emoji, compliment, link, list of what's on the site, or sign-off. Every detail in your message must come from the site you have just built and its brief.
+```
+Hi Sam & Denisa! 👋🥒  Love what you've got going on at The Pickle. The pickle lemonade had me sold.
+
+I noticed you don't have a website yet, so I put one together for you to have a look at:
+https://pickle-cafe-site.pages.dev
+
+It's got your menu, opening times, the pickles, reviews and a load of your photos from Instagram.
+A bit about us: we're STKR Studio, and we make websites for independent businesses. You can see more of what we do at https://stkrstudio.com
+
+If you fancy keeping it, it's £50 a month to get it live. That includes your own domain, there's nothing to pay upfront and there's no contract. Payments go through GoCardless by Direct Debit, so it's all secure. If you ever want to stop, you just stop, and the domain's yours to take with you.
+
+Happy to tweak anything if you'd like it changed. Either way, I'll probably be in for a sausage roll soon.
+```
+
+**Rules for the client message:**
+- **Specific to this build:** the names, emoji, compliment, pages.dev link, list of what's on the site and sign-off must all be correct for the website you have just built. Check each one against the brief and the finished site before outputting the message.
+- **Greeting:** use the client's first name(s) from the brief. If the client's name is not known, use the business name instead, e.g. "Hi The Pickle team!" or "Hi Smith Drainage!". Never guess a name.
+- **Tone:** human, warm and approachable, like a local writing to a local. Casual British English. Short sentences. No sales jargon, no corporate phrases, no exclamation marks beyond the greeting.
+- **Compliment and sign-off:** must be specific to this business and based on real details from the brief, their existing site, social media or reviews. Never invent a product, visit, or fact. If there is nothing specific to draw on, keep it simple and genuine rather than making something up.
+- **Link:** use the actual pages.dev URL for this site. If the designer has not yet connected Cloudflare Pages (Step 5), use the expected URL `https://[project-name].pages.dev` and tell the designer to confirm it before sending.
+- **What's on the site:** list only things that were actually built, in plain words.
+- **Existing website:** if the client already has a website (Modernise & Amend or Carbon Copy builds), replace the "I noticed you don't have a website yet" line with a natural equivalent, e.g. "I had a go at giving your website a fresh look, so I put a new version together for you to have a look at:".
+- **Fixed text:** the "A bit about us" line and the £50 a month paragraph must be used word for word. Never change the price, the terms or the links.
+- **No em dashes**, the same as all other copy. Use a full stop, comma or regular hyphen instead.
 
 ### 301 Redirect Audit — All Build Types
 Before building any site — Carbon Copy, Modernise, or New Build — crawl the existing live site to find every URL that currently resolves. Do not rely on the sitemap alone — WordPress and other CMS platforms generate URLs that get indexed but never appear in sitemaps (category pages, tag pages, author pages, old campaign pages, paginated pages, duplicate contact pages etc).
